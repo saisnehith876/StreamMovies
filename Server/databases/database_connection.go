@@ -10,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+var Client *mongo.Client = Connect()
+
 func Connect() *mongo.Client {
 
 	err := godotenv.Load(".env")
