@@ -13,7 +13,7 @@ type Ranking struct {
 }
 
 type Movie struct {
-	ID          bson.ObjectID `bson:"_id" json:"_id"`
+	ID          bson.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	ImdbID      string        `bson:"imdb_id" json:"imdb_id" validdate:"required"`
 	Title       string        `bson:"title" json:"title" validate:"required,min=2,max=500"`
 	PosterPath  string        `bson:"poster_path" json:"poster_path" validate:"required,url"`
@@ -22,4 +22,3 @@ type Movie struct {
 	AdminReview string        `bson:"admin_review" json:"admin_review" validate:"required"`
 	Ranking     Ranking       `bson:"ranking" json:"ranking" validate:"required"`
 }
-
