@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/saisnehith876/StreamMovies/Server/StreamMovie_Server/database"
 	"github.com/saisnehith876/StreamMovies/Server/StreamMovie_Server/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -15,7 +16,7 @@ import (
 // var movieCollection *mongo.Collection = database.OpenCollection("movies")
 var movieCollection *mongo.Collection = database.OpenCollection("Movies", database.Client) //be careful of names, Movies is the databse name used
 
-//var validate = validator.New()
+var validate = validator.New()
 
 func GetMovies() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -63,4 +64,33 @@ func GetMovie() gin.HandlerFunc {
 
 	}
 
+}
+
+func AddMovie() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+
+		defer cancel()
+
+		var movie models.Movie
+
+		if err := c.ShouldBindJSON(&movie); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+			return
+		}
+
+		if err := validate.Struct(movie); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
+			return
+		}
+		result, err := movieCollection.InsertOne(ctx, movie)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add movie"})
+			return
+
+		}
+		c.JSON(http.StatusCreated, result)
+
+	}
 }
