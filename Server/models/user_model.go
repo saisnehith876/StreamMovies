@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type user struct {
+type User struct {
 	ID        bson.ObjectID
 	UserId    string
 	FirstName string
