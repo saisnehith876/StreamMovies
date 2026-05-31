@@ -1,96 +1,30 @@
-package controllers
+package models
 
 import (
-	"context"
-	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"github.com/saisnehith876/StreamMovies/Server/StreamMovie_Server/database"
-	"github.com/saisnehith876/StreamMovies/Server/StreamMovie_Server/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-// var movieCollection *mongo.Collection = database.OpenCollection("movies")
-var movieCollection *mongo.Collection = database.OpenCollection("Movies", database.Client) //be careful of names, Movies is the databse name used
+type user struct {
+	ID        bson.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	UserID    string        `json:"user_id" bson:"user_id"`
+	FirstName string        `json:"first_name" bson:"first_name" validate:"required,min=2,max=100"`
+	LastNmae  string        `json:"last_name" bson:"last_name" validate:"required,min=2,max=100"`
+	Email     string        `json:"email" bson:"email" validate:"required,email"`
+	Password  string        `json:"password" bson:"password" validate:"required,min=6"`
+	// need to hash it
+	Role string `json:"role" bson:"role" validate:"oneof= ADMIN USER"`
+	//only 2 roles- admin or user
+	CreatedAt time.Time `json:"created_at" bson:"created _at"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated _at"`
+	Token     string    `json:"token" bson:"token"`
 
-var validate = validator.New()
+	//we r going to use JWT/ Json web Tokens for authentication and  authorization purposes in this application
+	//we'll persist the values with revlant tokens within the documents tat is represented in code by this user struct
+	// a JWT is comoact URL safe token used to securely transmit info between parties as JSON object
+	//header -Payload -Signature 3 parts of JWT
 
-func GetMovies() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(c, 100*time.Second)
-		defer cancel()
-
-		var movies []models.Movie
-		cursor, err := movieCollection.Find(ctx, bson.M{})
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch movies."})
-		}
-		defer cursor.Close(ctx)
-
-		if err = cursor.All(ctx, &movies); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode movies."})
-			return
-
-		}
-		c.JSON(http.StatusOK, movies)
-	}
-}
-
-func GetMovie() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
-		defer cancel()
-
-		movieID := c.Param("imdb_id")
-		if movieID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Movie ID is required"})
-			return
-		}
-
-		var movie models.Movie
-
-		err := movieCollection.FindOne(ctx, bson.M{"imdb_id": movieID}).Decode(&movie)
-
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
-			return
-		}
-
-		c.JSON(http.StatusOK, movie)
-
-	}
-
-}
-
-func AddMovie() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
-
-		defer cancel()
-
-		var movie models.Movie
-
-		if err := c.ShouldBindJSON(&movie); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-			return
-		}
-
-		if err := validate.Struct(movie); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Validation failed", "details": err.Error()})
-			return
-		}
-		result, err := movieCollection.InsertOne(ctx, movie)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add movie"})
-			return
-
-		}
-		c.JSON(http.StatusCreated, result)
-
-	}
+	RefreshToken   string  `json:"refresh_token" bson:"refresh_token"`
+	FavouriteGenre []Genre `json:"favourite_genre" bson:"favourite_genre" vaidate:"required,dive"`
 }
