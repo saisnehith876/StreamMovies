@@ -3,7 +3,8 @@ import axios from 'axios';
 
 import useAuth from './useAuth';
 
-const apiUrl = import.meta.env.VITE_API_BASE_URL;
+//const apiUrl = import.meta.env.VITE_API_BASE_URL;
+const apiUrl = "http://localhost:8080";
 
 const useAxiosPrivate = () =>{
 
